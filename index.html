@@ -1106,7 +1106,7 @@ function openModal(name) {
   imgEl.alt = name;
   imgEl.onerror = function() { imgWrap.innerHTML = '<div class="modal-img-placeholder">🧠</div>'; };
   // Encode only spaces, keep other chars as-is for Vercel static files
-  var imgPath = 'images/' + name.split(' ').join('-') + '.png';
+  var imgPath = 'images/' + name.toUpperCase().split(' ').join('-') + '.png';
   imgEl.src = imgPath;
   imgWrap.innerHTML = '';
   imgWrap.appendChild(imgEl);
