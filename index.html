@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🧠 Brainrot Live Stats</title>
+<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #07070f;
+    --panel: #0f0f20;
+    --border: #1e1e40;
+    --common: #a0a0b0;
+    --rare: #4db8ff;
+    --epic: #c084fc;
+    --legendary: #fbbf24;
+    --mythic: #f97316;
+    --god: #ef4444;
+    --secret: #10b981;
+    --og: #ff6fff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: #e0e0ff;
+    font-family: 'Nunito', sans-serif;
+    min-height: 100vh;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 40% at 20% 10%, rgba(192,132,252,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 30% at 80% 80%, rgba(249,115,22,0.05) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container { max-width: 1280px; margin: 0 auto; padding: 24px 16px; position: relative; z-index: 1; }
+
+  /* ── HEADER ── */
+  header { text-align: center; padding: 40px 0 28px; }
+  header h1 {
+    font-family: 'Bangers', cursive;
+    font-size: clamp(2.4rem, 7vw, 4.5rem);
+    letter-spacing: 4px;
+    background: linear-gradient(135deg, #c084fc 0%, #f97316 50%, #fbbf24 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 0 25px rgba(192,132,252,0.35));
+  }
+  header p { color: #555588; font-size: 0.85rem; margin-top: 6px; letter-spacing: 2px; text-transform: uppercase; }
+
+  /* ── STATUS BAR ── */
+  .status-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 30px;
+  }
+  .status-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 7px 18px;
+    font-size: 0.83rem;
+    font-weight: 700;
+  }
+  .status-pill .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #22c55e;
+    box-shadow: 0 0 6px #22c55e;
+    animation: blink 2s ease-in-out infinite;
+  }
+  .status-pill.offline .dot { background: #ef4444; box-shadow: 0 0 6px #ef4444; animation: none; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+  #lastUpdate { color: #555588; }
+  .refresh-btn {
+    background: linear-gradient(135deg, #c084fc33, #f9731633);
+    border: 1px solid #c084fc55;
+    color: #c084fc;
+    border-radius: 999px;
+    padding: 7px 18px;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 700;
+    font-size: 0.83rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .refresh-btn:hover { background: linear-gradient(135deg,#c084fc55,#f9731655); transform: scale(1.05); }
+
+  /* ── CONFIG BANNER ── */
+  .config-banner {
+    background: linear-gradient(135deg,#1a0a0a,#0a0a1a);
+    border: 1px solid #ef444455;
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 28px;
+    display: none;
+  }
+  .config-banner h3 { color: #ef4444; font-family:'Bangers',cursive; font-size:1.3rem; margin-bottom:10px; }
+  .config-banner p { color: #aaa; font-size: 0.85rem; line-height: 1.7; }
+  .config-banner code {
+    background: #ffffff14;
+    border-radius: 4px;
+    padding: 2px 7px;
+    font-size: 0.82rem;
+    color: #fbbf24;
+  }
+
+  /* ── SETUP FORM ── */
+  .setup-form {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    margin-bottom: 28px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: flex-end;
+  }
+  .setup-form label { font-size: 0.78rem; color: #7777aa; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 5px; }
+  .setup-form input {
+    background: #0a0a1a;
+    border: 1px solid #2a2a5a;
+    border-radius: 8px;
+    color: #e0e0ff;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.88rem;
+    padding: 9px 14px;
+    width: 260px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .setup-form input:focus { border-color: #c084fc; }
+  .setup-form input::placeholder { color: #333355; }
+  .save-btn {
+    background: linear-gradient(135deg, #c084fc, #f97316);
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    font-family: 'Bangers', cursive;
+    font-size: 1.1rem;
+    letter-spacing: 1px;
+    padding: 10px 26px;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.2s;
+  }
+  .save-btn:hover { opacity: 0.85; transform: scale(1.04); }
+
+  /* ── TOTAUX ── */
+  .totals-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 14px;
+    margin-bottom: 36px;
+  }
+  .total-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px 18px;
+    text-align: center;
+    transition: transform 0.2s;
+  }
+  .total-card:hover { transform: translateY(-3px); }
+  .total-card .tc-icon { font-size: 1.8rem; margin-bottom: 6px; }
+  .total-card .tc-value {
+    font-family: 'Bangers', cursive;
+    font-size: 2rem;
+    letter-spacing: 1px;
+    background: linear-gradient(135deg,#c084fc,#f97316);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .total-card .tc-label { font-size: 0.72rem; color: #555588; text-transform: uppercase; letter-spacing: 1px; margin-top: 3px; }
+
+  /* ── SECTION TITLE ── */
+  .section-title {
+    font-family: 'Bangers', cursive;
+    font-size: 1.7rem;
+    letter-spacing: 2px;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, currentColor, transparent);
+    opacity: 0.2;
+  }
+
+  /* ── SEARCH ── */
+  .search-wrap { margin-bottom: 18px; }
+  .search-wrap input {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    color: #e0e0ff;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.9rem;
+    padding: 10px 20px;
+    width: 100%;
+    max-width: 400px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .search-wrap input:focus { border-color: #c084fc55; }
+  .search-wrap input::placeholder { color: #333355; }
+
+  /* ── RARITY TABS ── */
+  .tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  .tab {
+    border-radius: 999px;
+    padding: 5px 16px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.15s;
+    background: rgba(255,255,255,0.04);
+    color: #777799;
+  }
+  .tab.active { color: #fff; }
+  .tab:hover { background: rgba(255,255,255,0.09); }
+
+  /* ── BRAINROT TABLE ── */
+  .table-wrap {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  thead { background: #0a0a18; }
+  th {
+    padding: 12px 16px;
+    font-size: 0.72rem;
+    color: #555588;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    text-align: left;
+    font-weight: 700;
+    cursor: pointer;
+    user-select: none;
+    transition: color 0.15s;
+  }
+  th:hover { color: #c084fc; }
+  th.sorted { color: #c084fc; }
+  tbody tr {
+    border-top: 1px solid #1a1a2e;
+    transition: background 0.12s;
+  }
+  tbody tr:hover { background: rgba(255,255,255,0.03); }
+  td { padding: 10px 16px; font-size: 0.86rem; }
+  .td-name { font-weight: 700; }
+  .td-rarity {
+    font-size: 0.72rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    display: inline-block;
+  }
+  .td-count {
+    font-family: 'Bangers', cursive;
+    font-size: 1.2rem;
+    letter-spacing: 1px;
+  }
+  .td-bar-cell { width: 120px; }
+  .td-bar { height: 4px; border-radius: 99px; background: #1a1a30; overflow: hidden; }
+  .td-bar-fill { height: 100%; border-radius: 99px; }
+  .td-gen { color: #555588; font-size: 0.78rem; }
+  .td-price { color: #555588; font-size: 0.78rem; }
+  .zero-row td { opacity: 0.3; }
+
+  /* Loading */
+  .loading {
+    text-align: center;
+    padding: 60px 20px;
+    color: #333366;
+  }
+  .loading .spinner {
+    width: 40px; height: 40px;
+    border: 3px solid #1a1a3a;
+    border-top-color: #c084fc;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .no-data {
+    text-align: center;
+    padding: 60px 20px;
+    color: #333366;
+    font-size: 0.9rem;
+  }
+
+  footer { text-align: center; color: #2a2a44; font-size: 0.75rem; padding: 24px 0 40px; }
+
+  /* Rarity colors */
+  .rc-Common    { color: var(--common); background: rgba(160,160,176,0.12); }
+  .rc-Rare      { color: var(--rare);   background: rgba(77,184,255,0.12); }
+  .rc-Epic      { color: var(--epic);   background: rgba(192,132,252,0.12); }
+  .rc-Legendary { color: var(--legendary); background: rgba(251,191,36,0.12); }
+  .rc-Mythic    { color: var(--mythic); background: rgba(249,115,22,0.12); }
+  .rc-BrainrotGod { color: var(--god); background: rgba(239,68,68,0.12); }
+  .rc-Secret    { color: var(--secret); background: rgba(16,185,129,0.12); }
+  .rc-OG        { color: var(--og);     background: rgba(255,111,255,0.15); }
+
+  /* ── MODAL FULLSCREEN ── */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: #0a0a18;
+    z-index: 1000;
+    display: flex;
+    overflow-y: auto;
+    animation: fadeIn 0.2s ease;
+  }
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+  .modal {
+    width: 100%; min-height: 100vh;
+    background: #0a0a18;
+    position: relative;
+    animation: slideUp 0.2s ease;
+    display: flex; flex-direction: column;
+  }
+  @keyframes slideUp { from{transform:translateY(16px);opacity:0} to{transform:translateY(0);opacity:1} }
+
+  .modal-close {
+    position: fixed; top: 18px; right: 18px;
+    background: rgba(255,255,255,0.08); border: none;
+    color: #aaa; border-radius: 50%; width: 38px; height: 38px;
+    cursor: pointer; font-size: 1rem; transition: all .15s; z-index: 10;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .modal-close:hover { background: rgba(255,255,255,0.16); color: #fff; }
+
+  /* Top hero section */
+  .modal-hero {
+    display: flex; align-items: flex-end; gap: 24px;
+    padding: 40px 32px 28px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 100%);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .modal-img {
+    width: 110px; height: 110px; border-radius: 20px;
+    object-fit: cover;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    flex-shrink: 0;
+  }
+  .modal-img-placeholder {
+    width: 110px; height: 110px; border-radius: 20px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 3rem; flex-shrink: 0;
+  }
+  .modal-hero-info { flex: 1; padding-bottom: 4px; }
+  .modal-title {
+    font-family: 'Bangers', cursive;
+    font-size: 2.4rem; letter-spacing: 2px;
+    line-height: 1; margin-bottom: 10px; padding-right: 48px;
+  }
+  .modal-rarity {
+    font-size: 0.68rem; font-weight: 900;
+    text-transform: uppercase; letter-spacing: 1.5px;
+    padding: 3px 12px; border-radius: 999px;
+    display: inline-block;
+  }
+
+  /* Stats row */
+  .modal-stats-row {
+    display: grid; grid-template-columns: repeat(2, 1fr);
+    gap: 12px; padding: 20px 32px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .modal-stat-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 14px; padding: 14px 18px;
+  }
+  .sc-label {
+    font-size: 0.62rem; color: #44446a;
+    text-transform: uppercase; letter-spacing: 1.2px;
+    font-weight: 700; margin-bottom: 5px;
+  }
+  .sc-value {
+    font-family: 'Bangers', cursive;
+    font-size: 1.9rem; letter-spacing: 1px; line-height: 1;
+  }
+
+  /* Sections */
+  .modal-section { padding: 20px 32px; border-top: 1px solid rgba(255,255,255,0.06); }
+  .modal-section-title {
+    font-size: 0.68rem; color: #55557a;
+    text-transform: uppercase; letter-spacing: 1.5px;
+    font-weight: 900; margin-bottom: 16px;
+  }
+
+  /* Bar rows */
+  .bar-row {
+    display: flex; align-items: center;
+    gap: 10px; margin-bottom: 11px;
+  }
+  .bar-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .bar-icon { font-size: 0.85rem; flex-shrink: 0; width: 18px; text-align: center; }
+  .bar-name {
+    width: 100px; font-size: 0.85rem; font-weight: 700;
+    flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .bar-track {
+    flex: 1; height: 6px;
+    background: rgba(255,255,255,0.07);
+    border-radius: 999px; overflow: hidden;
+  }
+  .bar-fill { height: 100%; border-radius: 999px; transition: width .5s ease; }
+  .bar-count { font-size: 0.82rem; font-weight: 700; min-width: 48px; text-align: right; }
+  .bar-pct { font-size: 0.72rem; color: #44446a; min-width: 52px; text-align: right; }
+
+  .trait-tag {
+    border-radius: 999px; padding: 3px 12px;
+    font-size: 0.72rem; font-weight: 700;
+    background: rgba(192,132,252,0.15);
+    border: 1px solid rgba(192,132,252,0.3);
+    color: #c084fc;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>🧠 BRAINROT LIVE STATS</h1>
+  <p>Statistiques en temps réel depuis le serveur Roblox</p>
+</header>
+
+<!-- Setup form -->
+<div class="setup-form" id="setupForm">
+  <div>
+    <label>Bin ID (jsonbin.io)</label>
+    <input type="text" id="inputBinId" placeholder="ex: 6613abc1234..." />
+  </div>
+  <div>
+    <label>Bin ID Details (mutations)</label>
+    <input type="text" id="inputBinId2" placeholder="2e Bin ID pour les mutations..." />
+  </div>
+  <div>
+    <label>Master Key</label>
+    <input type="text" id="inputApiKey" placeholder="$2a$10$..." />
+  </div>
+  <button class="save-btn" onclick="saveConfig()">💾 Connecter</button>
+</div>
+
+<!-- Config error -->
+<div class="config-banner" id="configBanner">
+  <h3>⚙️ Configuration requise</h3>
+  <p>
+    1. Installe le script Lua dans <code>ServerScriptService</code> de ton jeu Roblox<br>
+    2. Active <code>HTTPService</code> dans <em>Game Settings → Security</em><br>
+    3. Crée un compte sur <a href="https://jsonbin.io" target="_blank" style="color:#fbbf24">jsonbin.io</a>, crée un Bin, et colle son ID ci-dessus<br>
+    4. Met le même Bin ID dans le script Lua (<code>JSONBIN_BIN_ID</code>)
+  </p>
+</div>
+
+<!-- Status bar -->
+<div class="status-bar">
+  <div class="status-pill" id="statusPill">
+    <div class="dot"></div>
+    <span id="statusText">En attente…</span>
+  </div>
+  <span id="lastUpdate" style="font-size:0.78rem"></span>
+  <button class="refresh-btn" onclick="fetchData()">🔄 Actualiser</button>
+  <button class="refresh-btn" onclick="debugBin()" style="background:rgba(16,185,129,0.15);border-color:#10b98155;color:#10b981">🔍 Debug Bin</button>
+</div>
+
+<!-- Totals -->
+<div class="totals-grid" id="totalsGrid">
+  <div class="total-card"><div class="tc-icon">🧠</div><div class="tc-value" id="tBrainrots">–</div><div class="tc-label">Brainrots existants</div></div>
+  <div class="total-card"><div class="tc-icon">🎲</div><div class="tc-value" id="tUnique">–</div><div class="tc-label">Espèces différentes</div></div>
+  <div class="total-card"><div class="tc-icon">👥</div><div class="tc-value" id="tPlayers">–</div><div class="tc-label">Joueurs en ligne</div></div>
+  <div class="total-card"><div class="tc-icon">🏆</div><div class="tc-value" id="tTop">–</div><div class="tc-label">Brainrot le + commun</div></div>
+</div>
+
+<!-- Table -->
+<div class="section-title" style="color:#c084fc">📋 Détail par Brainrot</div>
+
+<div class="search-wrap">
+  <input type="text" id="searchInput" placeholder="🔍 Chercher un brainrot…" oninput="renderTable()">
+</div>
+
+<div class="tabs" id="rarityTabs"></div>
+
+<div class="table-wrap" id="tableWrap">
+  <div class="loading"><div class="spinner"></div>Connexion aux données…</div>
+</div>
+
+<footer>⚡ Données lues depuis Roblox DataStore → jsonbin.io · Auto-refresh toutes les 30s</footer>
+</div>
+
+<script>
+// ─── ANIMALS MASTER LIST (from Lua data) ─────────────────────────────────────
+const MASTER = [
+  {n:"Noobini Pizzanini",r:"Common",g:1,p:25},
+  {n:"Lirilì Larilà",r:"Common",g:3,p:250},
+  {n:"Tim Cheese",r:"Common",g:5,p:500},
+  {n:"Fluriflura",r:"Common",g:7,p:750},
+  {n:"Svinina Bombardino",r:"Common",g:10,p:1250},
+  {n:"Talpa Di Fero",r:"Common",g:9,p:1000},
+  {n:"Pipi Kiwi",r:"Common",g:13,p:1500},
+  {n:"Pipi Corni",r:"Common",g:14,p:1750},
+  {n:"Raccooni Jandelini",r:"Common",g:12,p:1350},
+  {n:"Tartaragno",r:"Common",g:13,p:1500},
+  {n:"Noobini Santanini",r:"Common",g:11,p:1300},
+  {n:"Trippi Troppi",r:"Rare",g:15,p:2000},
+  {n:"Gangster Footera",r:"Rare",g:30,p:4000},
+  {n:"Boneca Ambalabu",r:"Rare",g:40,p:5000},
+  {n:"Ta Ta Ta Ta Sahur",r:"Rare",g:55,p:7500},
+  {n:"Tric Trac Baraboom",r:"Rare",g:65,p:9000},
+  {n:"Bandito Bobritto",r:"Rare",g:35,p:4500},
+  {n:"Cacto Hipopotamo",r:"Rare",g:50,p:6500},
+  {n:"Pipi Avocado",r:"Rare",g:70,p:9500},
+  {n:"Pinealotto Fruttarino",r:"Rare",g:75,p:9750},
+  {n:"Cupcake Koala",r:"Rare",g:60,p:8000},
+  {n:"Frogo Elfo",r:"Rare",g:67,p:9250},
+  {n:"Cappuccino Assassino",r:"Epic",g:75,p:10000},
+  {n:"Brr Brr Patapim",r:"Epic",g:100,p:15000},
+  {n:"Trulimero Trulicina",r:"Epic",g:125,p:20000},
+  {n:"Bananita Dolphinita",r:"Epic",g:150,p:25000},
+  {n:"Brri Brri Bicus Dicus Bombicus",r:"Epic",g:175,p:30000},
+  {n:"Bambini Crostini",r:"Epic",g:135,p:22500},
+  {n:"Perochello Lemonchello",r:"Epic",g:160,p:27500},
+  {n:"Avocadini Guffo",r:"Epic",g:225,p:35000},
+  {n:"Salamino Penguino",r:"Epic",g:250,p:40000},
+  {n:"Ti Ti Ti Sahur",r:"Epic",g:225,p:37500},
+  {n:"Penguino Cocosino",r:"Epic",g:300,p:45000},
+  {n:"Avocadini Antilopini",r:"Epic",g:115,p:17500},
+  {n:"Bandito Axolito",r:"Epic",g:90,p:12500},
+  {n:"Malame Amarele",r:"Epic",g:140,p:23500},
+  {n:"Mangolini Parrocini",r:"Epic",g:235,p:38500},
+  {n:"Mummio Rappitto",r:"Epic",g:325,p:47500},
+  {n:"Frogato Pirato",r:"Epic",g:240,p:39000},
+  {n:"Wombo Rollo",r:"Epic",g:275,p:42500},
+  {n:"Doi Doi Do",r:"Epic",g:260,p:41000},
+  {n:"Penguin Tree",r:"Epic",g:270,p:42000},
+  {n:"Burbaloni Loliloli",r:"Legendary",g:200,p:35000},
+  {n:"Chimpanzini Bananini",r:"Legendary",g:300,p:50000},
+  {n:"Ballerina Cappuccina",r:"Legendary",g:500,p:100000},
+  {n:"Chef Crabracadabra",r:"Legendary",g:600,p:150000},
+  {n:"Glorbo Fruttodrillo",r:"Legendary",g:750,p:200000},
+  {n:"Blueberrinni Octopusini",r:"Legendary",g:1000,p:250000},
+  {n:"Lionel Cactuseli",r:"Legendary",g:650,p:175000},
+  {n:"Pandaccini Bananini",r:"Legendary",g:1250,p:300000},
+  {n:"Strawberrelli Flamingelli",r:"Legendary",g:1150,p:275000},
+  {n:"Cocosini Mama",r:"Legendary",g:1200,p:285000},
+  {n:"Pi Pi Watermelon",r:"Legendary",g:1300,p:315000},
+  {n:"Sigma Boy",r:"Legendary",g:1350,p:325000},
+  {n:"Pipi Potato",r:"Legendary",g:1100,p:265000},
+  {n:"Quivioli Ameleonni",r:"Legendary",g:900,p:225000},
+  {n:"Tirilikalika Tirilikalako",r:"Legendary",g:450,p:75000},
+  {n:"Caramello Filtrello",r:"Legendary",g:1050,p:255000},
+  {n:"Signore Carapace",r:"Legendary",g:1325,p:320000},
+  {n:"Sigma Girl",r:"Legendary",g:1800,p:340000},
+  {n:"Quackula",r:"Legendary",g:1275,p:310000},
+  {n:"Buho de Fuego",r:"Legendary",g:1850,p:345000},
+  {n:"Clickerino Crabo",r:"Legendary",g:1000,p:250000},
+  {n:"Puffaball",r:"Legendary",g:1500,p:330000},
+  {n:"Chocco Bunny",r:"Legendary",g:1400,p:327500},
+  {n:"Sealo Regalo",r:"Legendary",g:1825,p:342500},
+  {n:"Frigo Camelo",r:"Mythic",g:1900,p:350000},
+  {n:"Orangutini Ananassini",r:"Mythic",g:2000,p:400000},
+  {n:"Bombardiro Crocodilo",r:"Mythic",g:2500,p:500000},
+  {n:"Bombombini Gusini",r:"Mythic",g:5000,p:1000000},
+  {n:"Rhino Toasterino",r:"Mythic",g:2150,p:450000},
+  {n:"Cavallo Virtuoso",r:"Mythic",g:7500,p:2500000},
+  {n:"Spioniro Golubiro",r:"Mythic",g:3500,p:750000},
+  {n:"Zibra Zubra Zibralini",r:"Mythic",g:6000,p:1500000},
+  {n:"Tigrilini Watermelini",r:"Mythic",g:6500,p:1750000},
+  {n:"Gorillo Watermelondrillo",r:"Mythic",g:8000,p:3000000},
+  {n:"Avocadorilla",r:"Mythic",g:7000,p:2000000},
+  {n:"Ganganzelli Trulala",r:"Mythic",g:9000,p:3750000},
+  {n:"Tob Tobi Tobi",r:"Mythic",g:8500,p:3250000},
+  {n:"Te Te Te Sahur",r:"Mythic",g:9500,p:4000000},
+  {n:"Tracoducotulu Delapeladustuz",r:"Mythic",g:12000,p:4250000},
+  {n:"Lerulerulerule",r:"Mythic",g:8750,p:3500000},
+  {n:"Carloo",r:"Mythic",g:13500,p:4500000},
+  {n:"Carrotini Brainini",r:"Mythic",g:15000,p:4750000},
+  {n:"Brutto Gialutto",r:"Mythic",g:3000,p:600000},
+  {n:"Gorillo Subwoofero",r:"Mythic",g:7750,p:2750000},
+  {n:"Los Noobinis",r:"Mythic",g:12500,p:4350000},
+  {n:"Rhino Helicopterino",r:"Mythic",g:11000,p:4100000},
+  {n:"Elefanto Frigo",r:"Mythic",g:14000,p:4600000},
+  {n:"Toiletto Focaccino",r:"Mythic",g:16000,p:4850000},
+  {n:"Cachorrito Melonito",r:"Mythic",g:13000,p:4400000},
+  {n:"Bananito Bandito",r:"Mythic",g:16500,p:4900000},
+  {n:"Magi Ribbitini",r:"Mythic",g:11500,p:4200000},
+  {n:"Jacko Spaventosa",r:"Mythic",g:16250,p:4875000},
+  {n:"Stoppo Luminino",r:"Mythic",g:8000,p:3000000},
+  {n:"Centrucci Nuclucci",r:"Mythic",g:15500,p:4800000},
+  {n:"Jingle Jingle Sahur",r:"Mythic",g:12250,p:4300000},
+  {n:"Tree Tree Tree Sahur",r:"Mythic",g:17000,p:4950000},
+  {n:"Spongini Quackini",r:"Mythic",g:13000,p:4400000},
+  {n:"Fizzy Soda",r:"Mythic",g:17250,p:4975000},
+  {n:"Chihuanini Taconini",r:"Brainrot God",g:45000,p:8500000},
+  {n:"Cocofanto Elefanto",r:"Brainrot God",g:17500,p:5000000},
+  {n:"Tralalero Tralala",r:"Brainrot God",g:50000,p:10000000},
+  {n:"Odin Din Din Dun",r:"Brainrot God",g:75000,p:15000000},
+  {n:"Girafa Celestre",r:"Brainrot God",g:20000,p:7500000},
+  {n:"Trenostruzzo Turbo 3000",r:"Brainrot God",g:150000,p:25000000},
+  {n:"Matteo",r:"Brainrot God",g:50000,p:10000000},
+  {n:"Tigroligre Frutonni",r:"Brainrot God",g:60000,p:14000000},
+  {n:"Orcalero Orcala",r:"Brainrot God",g:100000,p:25000000},
+  {n:"Unclito Samito",r:"Brainrot God",g:75000,p:20000000},
+  {n:"Gattatino Nyanino",r:"Brainrot God",g:35000,p:7500000},
+  {n:"Espresso Signora",r:"Brainrot God",g:70000,p:25000000},
+  {n:"Ballerino Lololo",r:"Brainrot God",g:200000,p:35000000},
+  {n:"Piccione Macchina",r:"Brainrot God",g:225000,p:40000000},
+  {n:"Los Crocodillitos",r:"Brainrot God",g:55000,p:12500000},
+  {n:"Tukanno Bananno",r:"Brainrot God",g:100000,p:22500000},
+  {n:"Trippi Troppi Troppa Trippa",r:"Brainrot God",g:175000,p:30000000},
+  {n:"Los Tungtungtungcitos",r:"Brainrot God",g:210000,p:37500000},
+  {n:"Bulbito Bandito Traktorito",r:"Brainrot God",g:205000,p:35000000},
+  {n:"Los Orcalitos",r:"Brainrot God",g:235000,p:45000000},
+  {n:"Tipi Topi Taco",r:"Brainrot God",g:75000,p:20000000},
+  {n:"Bombardini Tortinii",r:"Brainrot God",g:225000,p:50000000},
+  {n:"Tralalita Tralala",r:"Brainrot God",g:100000,p:20000000},
+  {n:"Urubini Flamenguini",r:"Brainrot God",g:150000,p:30000000},
+  {n:"Alessio",r:"Brainrot God",g:85000,p:17500000},
+  {n:"Pakrahmatmamat",r:"Brainrot God",g:215000,p:37500000},
+  {n:"Los Bombinitos",r:"Brainrot God",g:220000,p:42500000},
+  {n:"Brr es Teh Patipum",r:"Brainrot God",g:225000,p:40000000},
+  {n:"Tartaruga Cisterna",r:"Brainrot God",g:250000,p:45000000},
+  {n:"Cacasito Satalito",r:"Brainrot God",g:240000,p:45000000},
+  {n:"Mastodontico Telepiedone",r:"Brainrot God",g:275000,p:47500000},
+  {n:"Crabbo Limonetta",r:"Brainrot God",g:235000,p:46000000},
+  {n:"Gattito Tacoto",r:"Brainrot God",g:165000,p:32500000},
+  {n:"Los Tipi Tacos",r:"Brainrot God",g:260000,p:46000000},
+  {n:"Antonio",r:"Brainrot God",g:18500,p:6000000},
+  {n:"Las Capuchinas",r:"Brainrot God",g:185000,p:32500000},
+  {n:"Orcalita Orcala",r:"Brainrot God",g:240000,p:45000000},
+  {n:"Piccionetta Macchina",r:"Brainrot God",g:270000,p:47000000},
+  {n:"Anpali Babel",r:"Brainrot God",g:280000,p:48000000},
+  {n:"Extinct Ballerina",r:"Brainrot God",g:125000,p:23500000},
+  {n:"Tractoro Dinosauro",r:"Brainrot God",g:230000,p:42500000},
+  {n:"Belula Beluga",r:"Brainrot God",g:290000,p:60000000},
+  {n:"Capi Taco",r:"Brainrot God",g:155000,p:31000000},
+  {n:"Dug dug dug",r:"Brainrot God",g:255000,p:45500000},
+  {n:"Corn Corn Corn Sahur",r:"Brainrot God",g:250000,p:45000000},
+  {n:"Brasilini Berimbini",r:"Brainrot God",g:285000,p:55000000},
+  {n:"Squalanana",r:"Brainrot God",g:250000,p:45000000},
+  {n:"Pop Pop Sahur",r:"Brainrot God",g:295000,p:65000000},
+  {n:"Vampira Cappucina",r:"Brainrot God",g:125000,p:24500000},
+  {n:"Jacko Jack Jack",r:"Brainrot God",g:150000,p:30000000},
+  {n:"Snailenzo",r:"Brainrot God",g:250000,p:45000000},
+  {n:"Tentacolo Tecnico",r:"Brainrot God",g:292500,p:62500000},
+  {n:"Pakrahmatmatina",r:"Brainrot God",g:225000,p:40500000},
+  {n:"Bambu Bambu Sahur",r:"Brainrot God",g:275000,p:47500000},
+  {n:"Krupuk Pagi Pagi",r:"Brainrot God",g:290000,p:60000000},
+  {n:"Mummy Ambalabu",r:"Brainrot God",g:250000,p:45000000},
+  {n:"Cappuccino Clownino",r:"Brainrot God",g:285000,p:48500000},
+  {n:"Skull Skull Skull",r:"Brainrot God",g:290000,p:60000000},
+  {n:"Aquanaut",r:"Brainrot God",g:245000,p:45500000},
+  {n:"Frio Ninja",r:"Brainrot God",g:265000,p:46500000},
+  {n:"Money Money Man",r:"Brainrot God",g:65000,p:17500000},
+  {n:"Noo La Polizia",r:"Brainrot God",g:280000,p:67000000},
+  {n:"Los Chihuaninis",r:"Brainrot God",g:160000,p:32000000},
+  {n:"Los Gattitos",r:"Brainrot God",g:275000,p:47500000},
+  {n:"Granchiello Spiritell",r:"Brainrot God",g:260000,p:46000000},
+  {n:"Ballerina Peppermintina",r:"Brainrot God",g:215000,p:37500000},
+  {n:"Ginger Globo",r:"Brainrot God",g:257500,p:45750000},
+  {n:"Ginger Cisterna",r:"Brainrot God",g:293500,p:63500000},
+  {n:"Yeti Claus",r:"Brainrot God",g:257500,p:45750000},
+  {n:"Buho de Noelo",r:"Brainrot God",g:267500,p:46750000},
+  {n:"Chrismasmamat",r:"Brainrot God",g:277500,p:47750000},
+  {n:"Cocoa Assassino",r:"Brainrot God",g:291000,p:61000000},
+  {n:"Pandanini Frostini",r:"Brainrot God",g:294000,p:64000000},
+  {n:"Tootini Shrimpini",r:"Brainrot God",g:260000,p:46000000},
+  {n:"Boba Panda",r:"Brainrot God",g:270000,p:47000000},
+  {n:"Dolphini Jetskini",r:"Brainrot God",g:294500,p:64500000},
+  {n:"Luv Luv Luv",r:"Brainrot God",g:282500,p:48250000},
+  {n:"Karkerheart Luvkur",r:"Brainrot God",g:297500,p:67500000},
+  {n:"La Vacca Saturno Saturnita",r:"Secret",g:300000,p:50000000},
+  {n:"Los Tralaleritos",r:"Secret",g:500000,p:100000000},
+  {n:"Graipuss Medussi",r:"Secret",g:1000000,p:250000000},
+  {n:"La Grande Combinasion",r:"Secret",g:10000000,p:1000000000},
+  {n:"Sammyni Spyderini",r:"Secret",g:325000,p:75000000},
+  {n:"Garama and Madundung",r:"Secret",g:50000000,p:10000000000},
+  {n:"Torrtuginni Dragonfrutini",r:"Secret",g:350000,p:125000000},
+  {n:"Las Tralaleritas",r:"Secret",g:650000,p:150000000},
+  {n:"Pot Hotspot",r:"Secret",g:2500000,p:600000000},
+  {n:"Nuclearo Dinossauro",r:"Secret",g:15000000,p:2500000000},
+  {n:"Las Vaquitas Saturnitas",r:"Secret",g:750000,p:200000000},
+  {n:"Chicleteira Bicicleteira",r:"Secret",g:3500000,p:750000000},
+  {n:"Karkerkar Kurkur",r:"Secret",g:300000,p:100000000},
+  {n:"Dragon Cannelloni",r:"Secret",g:250000000,p:250000000000},
+  {n:"Job Job Job Sahur",r:"Secret",g:700000,p:175000000},
+  {n:"Blackhole Goat",r:"Secret",g:400000,p:75000000},
+  {n:"Bisonte Giuppitere",r:"Secret",g:300000,p:75000000},
+  {n:"Fragola La La La",r:"Secret",g:450000,p:125000000},
+  {n:"Tralaledon",r:"Secret",g:27500000,p:3000000000},
+  {n:"Los Bros",r:"Secret",g:24000000,p:2600000000},
+  {n:"Chachechi",r:"Secret",g:400000,p:85000000},
+  {n:"Extinct Tralalero",r:"Secret",g:450000,p:125000000},
+  {n:"Extinct Matteo",r:"Secret",g:625000,p:140000000},
+  {n:"67",r:"Secret",g:7500000,p:1250000000},
+  {n:"Las Sis",r:"Secret",g:17500000,p:2500000000},
+  {n:"Celularcini Viciosini",r:"Secret",g:22500000,p:2750000000},
+  {n:"La Cucaracha",r:"Secret",g:475000,p:110000000},
+  {n:"Yess my examine",r:"Secret",g:575000,p:130000000},
+  {n:"Karker Sahur",r:"Secret",g:725000,p:185000000},
+  {n:"Money Money Puggy",r:"Secret",g:21000000,p:2600000000},
+  {n:"Los Primos",r:"Secret",g:31000000,p:3750000000},
+  {n:"Tung Tung Tung Sahur",r:"Secret",g:1500000,p:500000000},
+  {n:"Los Tortus",r:"Secret",g:500000,p:100000000},
+  {n:"Los Karkeritos",r:"Secret",g:750000,p:200000000},
+  {n:"Los Jobcitos",r:"Secret",g:1500000,p:500000000},
+  {n:"Los 67",r:"Secret",g:22500000,p:2750000000},
+  {n:"Zombie Tralala",r:"Secret",g:500000,p:100000000},
+  {n:"Vulturino Skeletono",r:"Secret",g:500000,p:110000000},
+  {n:"Frankentteo",r:"Secret",g:700000,p:175000000},
+  {n:"La Vacca Jacko Linterino",r:"Secret",g:850000,p:225000000},
+  {n:"Chicleteirina Bicicleteirina",r:"Secret",g:4000000,p:850000000},
+  {n:"Eviledon",r:"Secret",g:31500000,p:3850000000},
+  {n:"Los Mobilis",r:"Secret",g:22000000,p:2700000000},
+  {n:"Boatito Auratito",r:"Secret",g:525000,p:115000000},
+  {n:"Horegini Boom",r:"Secret",g:2750000,p:650000000},
+  {n:"Rang Ring Bus",r:"Secret",g:6000000,p:1100000000},
+  {n:"Mieteteira Bicicleteira",r:"Secret",g:26000000,p:2750000000},
+  {n:"Jackorilla",r:"Secret",g:315000,p:80000000},
+  {n:"Pumpkini Spyderini",r:"Secret",g:650000,p:165000000},
+  {n:"Trickolino",r:"Secret",g:900000,p:235000000},
+  {n:"Telemorte",r:"Secret",g:2000000,p:550000000},
+  {n:"Pot Pumpkin",r:"Secret",g:3000000,p:700000000},
+  {n:"Noo my Candy",r:"Secret",g:5000000,p:900000000},
+  {n:"1x1x1x1",r:"Secret",g:1111111,p:255555555},
+  {n:"Guest 666",r:"Secret",g:6666666,p:1166666666},
+  {n:"Pirulitoita Bicicleteira",r:"Secret",g:2500000,p:600000000},
+  {n:"Los Puggies",r:"Secret",g:30000000,p:3000000000},
+  {n:"Swag Soda",r:"Secret",g:13000000,p:1800000000},
+  {n:"Orcaledon",r:"Secret",g:40000000,p:7000000000},
+  {n:"Los Cucarachas",r:"Secret",g:1250000,p:300000000},
+  {n:"Los Burritos",r:"Secret",g:8500000,p:1400000000},
+  {n:"Los Quesadillas",r:"Secret",g:4500000,p:875000000},
+  {n:"Fishino Clownino",r:"Secret",g:15500000,p:2100000000},
+  {n:"Gobblino Uniciclino",r:"Secret",g:27500000,p:2850000000},
+  {n:"Giftini Spyderini",r:"Secret",g:999999,p:240000000},
+  {n:"GOAT",r:"Secret",g:950000,p:237500000},
+  {n:"Brunito Marsito",r:"Secret",g:3500000,p:750000000},
+  {n:"Los Trios",r:"Secret",g:700000,p:175000000},
+  {n:"Chill Puppy",r:"Secret",g:4000000,p:850000000},
+  {n:"Arcadopus",r:"Secret",g:5000000,p:900000000},
+  {n:"Spinny Hammy",r:"Secret",g:17000000,p:2300000000},
+  {n:"Bacuru and Egguru",r:"Secret",g:24000000,p:3850000000},
+  {n:"Mi Gatito",r:"Secret",g:3250000,p:725000000},
+  {n:"Los Mi Gatitos",r:"Secret",g:6500000,p:1250000000},
+  {n:"Love Love Love Sahur",r:"Secret",g:1000000,p:250000000},
+  {n:"Cupid Cupid Sahur",r:"Secret",g:3100000,p:715000000},
+  {n:"Cupid Hotspot",r:"Secret",g:3500000,p:750000000},
+  {n:"Noo my Heart",r:"Secret",g:13000000,p:1800000000},
+  {n:"Chicleteira Cupideira",r:"Secret",g:17500000,p:2500000000},
+  {n:"Lovin Rose",r:"Secret",g:32500000,p:4250000000},
+  {n:"La Romantic Grande",r:"Secret",g:40000000,p:7000000000},
+  {n:"Rosetti Tualetti",r:"Secret",g:50000000,p:10000000000},
+  {n:"Love Love Bear",r:"Secret",g:75000000,p:22500000000},
+  {n:"Headless Horseman",r:"OG",g:500000000,p:325000000000},
+  {n:"Skibidi Toilet",r:"OG",g:400000000,p:400000000000},
+  {n:"Strawberry Elephant",r:"OG",g:750000000,p:750000000000},
+  {n:"Meowl",r:"OG",g:500000000,p:500000000000},
+];
+
+const MASTER_MAP = {};
+MASTER.forEach(a => MASTER_MAP[a.n] = a);
+
+
+const MUTATIONS = {
+  "Normal":      { color: "#a0a0b0", bg: "rgba(160,160,176,0.1)", border: "rgba(160,160,176,0.25)" },
+  "Gold":        { color: "#FFDE59", bg: "rgba(255,222,89,0.15)",  border: "rgba(255,222,89,0.4)"  },
+  "Diamond":     { color: "#25C4FE", bg: "rgba(37,196,254,0.15)", border: "rgba(37,196,254,0.4)"  },
+  "Rubber":      { color: "#888888", bg: "rgba(88,88,88,0.15)",   border: "rgba(88,88,88,0.4)"    },
+  "Bloodrot":    { color: "#ff4455", bg: "rgba(145,0,27,0.2)",    border: "rgba(145,0,27,0.5)"    },
+  "Rainbow":     { color: "#ff00fb", bg: "rgba(255,0,251,0.12)",  border: "rgba(255,0,251,0.4)"   },
+  "Candy":       { color: "#ff46f6", bg: "rgba(255,70,246,0.12)", border: "rgba(255,70,246,0.4)"  },
+  "Lava":        { color: "#ff7700", bg: "rgba(255,119,0,0.15)",  border: "rgba(255,119,0,0.4)"   },
+  "Galaxy":      { color: "#aa3cff", bg: "rgba(170,60,255,0.15)", border: "rgba(170,60,255,0.4)"  },
+  "YinYang":     { color: "#ffffff", bg: "rgba(255,255,255,0.08)",border: "rgba(255,255,255,0.3)" },
+  "Radioactive": { color: "#68f500", bg: "rgba(104,245,0,0.12)",  border: "rgba(104,245,0,0.4)"   },
+  "Cursed":      { color: "#f53838", bg: "rgba(245,56,56,0.12)",  border: "rgba(245,56,56,0.4)"   },
+  "Divine":      { color: "#ffd13b", bg: "rgba(255,209,59,0.15)", border: "rgba(255,209,59,0.4)"  },
+};
+const RARITY_ORDER = ["Common","Rare","Epic","Legendary","Mythic","Brainrot God","Secret","OG"];
+const RARITY_COLORS = {
+  "Common":"#a0a0b0","Rare":"#4db8ff","Epic":"#c084fc",
+  "Legendary":"#fbbf24","Mythic":"#f97316","Brainrot God":"#ef4444",
+  "Secret":"#10b981","OG":"#ff6fff"
+};
+
+function fmtNum(n) {
+  if(n>=1e9)  return (n/1e9).toFixed(1).replace(/\.0$/,'')+'B';
+  if(n>=1e6)  return (n/1e6).toFixed(1).replace(/\.0$/,'')+'M';
+  if(n>=1e3)  return (n/1e3).toFixed(1).replace(/\.0$/,'')+'K';
+  return n.toString();
+}
+
+function timeAgo(ts) {
+  const diff = Math.floor(Date.now()/1000) - ts;
+  if(diff < 60) return `il y a ${diff}s`;
+  if(diff < 3600) return `il y a ${Math.floor(diff/60)}min`;
+  return `il y a ${Math.floor(diff/3600)}h`;
+}
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+let liveData = null;
+let sortCol = 'count';
+let sortAsc = false;
+let filterRarity = 'Tous';
+
+// ─── CONFIG storage ──────────────────────────────────────────────────────────
+function saveConfig() {
+  const binId  = document.getElementById('inputBinId').value.trim();
+  const binId2 = document.getElementById('inputBinId2').value.trim();
+  const apiKey = document.getElementById('inputApiKey').value.trim();
+  if(!binId) { alert('Entre un Bin ID !'); return; }
+  sessionStorage.setItem('binId', binId);
+  sessionStorage.setItem('binId2', binId2);
+  sessionStorage.setItem('apiKey', apiKey);
+  fetchData();
+}
+
+function loadConfig() {
+  const binId  = sessionStorage.getItem('binId') || '';
+  const binId2 = sessionStorage.getItem('binId2') || '';
+  const apiKey = sessionStorage.getItem('apiKey') || '';
+  document.getElementById('inputBinId').value  = binId;
+  document.getElementById('inputBinId2').value = binId2;
+  document.getElementById('inputApiKey').value = apiKey;
+  return { binId, binId2, apiKey };
+}
+
+// ─── FETCH DATA ───────────────────────────────────────────────────────────────
+async function fetchData() {
+  const { binId, binId2, apiKey } = loadConfig();
+  if(!binId) {
+    document.getElementById('configBanner').style.display = 'block';
+    setStatus(false, 'Non configuré');
+    showNoData('Entre ton Bin ID jsonbin.io ci-dessus pour commencer.');
+    return;
+  }
+  document.getElementById('configBanner').style.display = 'none';
+  setStatus(true, 'Chargement…');
+
+  const headers = { 'X-Bin-Meta': 'false' };
+  if(apiKey) { headers['X-Master-Key'] = apiKey; headers['X-Access-Key'] = apiKey; }
+
+  try {
+    const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, { headers });
+    const text = await res.text();
+
+    if(!res.ok) {
+      if(res.status === 401) {
+        setStatus(false, '🔒 Bin privé');
+        showNoData('Bin privé ! Sur jsonbin.io → ton bin → icône 🔒 → mets en Public. Ou entre ta Master Key.');
+      } else if(res.status === 404) {
+        setStatus(false, 'Bin introuvable');
+        showNoData('Bin ID introuvable. Vérifie le Bin ID sur jsonbin.io.');
+      } else {
+        setStatus(false, 'Erreur HTTP ' + res.status);
+        showNoData('Erreur HTTP ' + res.status + ' : ' + text.slice(0,200));
+      }
+      return;
+    }
+
+    const json = JSON.parse(text);
+    const record = (json.record !== undefined) ? json.record : json;
+
+    if(!record || typeof record !== 'object') {
+      throw new Error('Données invalides : ' + text.slice(0,100));
+    }
+
+    liveData = record;
+    setStatus(true, `En ligne · ${liveData.totalPlayers ?? '?'} joueur(s)`);
+    document.getElementById('lastUpdate').textContent =
+      liveData.lastUpdated ? timeAgo(liveData.lastUpdated) : '';
+    renderAll();
+
+    // Fetch details (mutations) from second bin
+    if(binId2) {
+      try {
+        const res2 = await fetch(`https://api.jsonbin.io/v3/b/${binId2}/latest`, { headers });
+        if(res2.ok) {
+          const json2 = JSON.parse(await res2.text());
+          const rec2  = json2.record ?? json2;
+          if(rec2) {
+            liveData.mutSummary   = rec2.mutSummary   || {};
+            liveData.traitSummary = rec2.traitSummary || {};
+            console.log('[BrainrotStats] Details chargés:', Object.keys(liveData.mutSummary).length, 'brainrots avec données');
+          }
+        }
+      } catch(e2) { console.warn('[BrainrotStats] Details bin error:', e2); }
+    }
+  } catch(e) {
+    setStatus(false, 'Erreur');
+    showNoData('Erreur : ' + e.message);
+    console.error('[BrainrotStats]', e);
+  }
+}
+
+function setStatus(ok, msg) {
+  const pill = document.getElementById('statusPill');
+  document.getElementById('statusText').textContent = msg;
+  pill.classList.toggle('offline', !ok);
+}
+
+function showNoData(msg) {
+  document.getElementById('tableWrap').innerHTML = `<div class="no-data">😕 ${msg}</div>`;
+}
+
+// ─── RENDER ───────────────────────────────────────────────────────────────────
+function renderAll() {
+  if(!liveData) return;
+  const counts = liveData.counts || {};
+
+  // Merge with master list: all animals, count = 0 if not in live data
+  const rows = MASTER.map(a => ({
+    ...a,
+    count: counts[a.n] || 0
+  }));
+
+  // Totals
+  const totalBrainrots = Object.values(counts).reduce((s,v)=>s+v,0);
+  const uniqueSpecies  = Object.keys(counts).filter(k=>counts[k]>0).length;
+  const topEntry       = Object.entries(counts).sort((a,b)=>b[1]-a[1])[0];
+  document.getElementById('tBrainrots').textContent = fmtNum(totalBrainrots);
+  document.getElementById('tUnique').textContent    = uniqueSpecies;
+  document.getElementById('tPlayers').textContent   = liveData.totalPlayers ?? '–';
+  document.getElementById('tTop').textContent       = topEntry ? topEntry[0].split(' ').slice(0,2).join(' ') : '–';
+
+  // Tabs
+  const tabs = document.getElementById('rarityTabs');
+  const allRarities = ['Tous', ...RARITY_ORDER];
+  tabs.innerHTML = allRarities.map(r => {
+    const cnt = r === 'Tous' ? rows.filter(x=>x.count>0).length
+      : rows.filter(x=>x.r===r && x.count>0).length;
+    const col = r === 'Tous' ? '#c084fc' : (RARITY_COLORS[r]||'#888');
+    const active = filterRarity === r ? 'active' : '';
+    return `<div class="tab ${active}" style="${active?`border-color:${col}55;background:${col}22;color:${col}`:''}"
+      onclick="setFilter('${r}')">${r} <span style="opacity:.55">(${cnt})</span></div>`;
+  }).join('');
+
+  renderTable(rows);
+}
+
+function setFilter(r) {
+  filterRarity = r;
+  renderAll();
+}
+
+function renderTable(rows) {
+  if(!liveData) return;
+  const counts = liveData.counts || {};
+  rows = rows || MASTER.map(a => ({ ...a, count: counts[a.n] || 0 }));
+
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  const maxCount = Math.max(...rows.map(r=>r.count), 1);
+
+  let filtered = rows;
+  if(filterRarity !== 'Tous') filtered = filtered.filter(r=>r.r === filterRarity);
+  if(search) filtered = filtered.filter(r=>r.n.toLowerCase().includes(search));
+
+  // Sort
+  filtered.sort((a,b) => {
+    let av = a[sortCol==='count'?'count':sortCol==='g'?'g':'n'];
+    let bv = b[sortCol==='count'?'count':sortCol==='g'?'g':'n'];
+    if(typeof av === 'string') return sortAsc ? av.localeCompare(bv) : bv.localeCompare(av);
+    return sortAsc ? av - bv : bv - av;
+  });
+
+  if(!filtered.length) { showNoData('Aucun brainrot trouvé.'); return; }
+
+  const th = (col, label) => {
+    const active = sortCol === col ? 'sorted' : '';
+    const arrow = sortCol === col ? (sortAsc ? ' ↑' : ' ↓') : '';
+    return `<th class="${active}" onclick="setSort('${col}')">${label}${arrow}</th>`;
+  };
+
+  const rows_html = filtered.map(row => {
+    const col = RARITY_COLORS[row.r] || '#888';
+    const rcls = 'rc-' + row.r.replace(' ','');
+    const pct  = Math.round((row.count / maxCount) * 100);
+    const zeroClass = row.count === 0 ? 'zero-row' : '';
+    const hasDetails = liveData?.details?.[row.n]?.length > 0;
+    const cursor = hasDetails ? 'cursor:pointer' : '';
+    const hint = hasDetails ? ' title="Cliquer pour voir les détails"' : '';
+    return `<tr class="${zeroClass}" style="${cursor}" onclick="openModal('${row.n.replace(/'/g,"\\'")}')">
+      <td class="td-name" style="color:${col}">${row.n}${hasDetails ? ' <span style="opacity:.4;font-size:.7rem">▶</span>' : ''}</td>
+      <td><span class="td-rarity ${rcls}">${row.r}</span></td>
+      <td class="td-count" style="color:${col}">${row.count}</td>
+      <td class="td-bar-cell">
+        <div class="td-bar"><div class="td-bar-fill" style="width:${pct}%;background:${col}"></div></div>
+      </td>
+      <td class="td-gen">Gen ${fmtNum(row.g)}</td>
+      <td class="td-price">💰${fmtNum(row.p)}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('tableWrap').innerHTML = `
+    <table>
+      <thead><tr>
+        ${th('n','Nom')}
+        ${th('r','Rareté')}
+        ${th('count','Existants')}
+        <th>Barre</th>
+        ${th('g','Génération')}
+        <th>Prix</th>
+      </tr></thead>
+      <tbody>${rows_html}</tbody>
+    </table>`;
+}
+
+function setSort(col) {
+  if(sortCol === col) sortAsc = !sortAsc;
+  else { sortCol = col; sortAsc = false; }
+  renderTable();
+}
+
+
+
+async function debugBin() {
+  const { binId, apiKey } = loadConfig();
+  const headers = { 'X-Bin-Meta': 'false' };
+  if(apiKey) { headers['X-Master-Key'] = apiKey; headers['X-Access-Key'] = apiKey; }
+  const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, { headers });
+  const text = await res.text();
+  const json = JSON.parse(text);
+  const record = json.record ?? json;
+  
+  const details = record.details || {};
+  const counts  = record.counts  || {};
+  const names   = Object.keys(details);
+  
+  // Find entries with mutations
+  let mutFound = [];
+  for(const name of names) {
+    for(const c of details[name]) {
+      if(c.mutation) { mutFound.push({name, mutation: c.mutation, traits: c.traits}); break; }
+    }
+  }
+  
+  const msg = [
+    '📦 Bin contient:',
+    '  totalBrainrots: ' + (record.totalBrainrots ?? '?'),
+    '  totalPlayers: '   + (record.totalPlayers   ?? '?'),
+    '  types dans counts: ' + Object.keys(counts).length,
+    '  types dans details: ' + names.length,
+    '',
+    mutFound.length > 0
+      ? '🧬 Mutations trouvées:\n' + mutFound.slice(0,5).map(x => `  ${x.name} → ${x.mutation}`).join('\n')
+      : '❌ Aucune mutation dans details — le script Lua doit repusher',
+    '',
+    'Premier details[0]:',
+    names.length > 0 ? JSON.stringify(details[names[0]][0], null, 2) : 'vide'
+  ].join('\n');
+  
+  alert(msg);
+}
+// ─── MODAL ───────────────────────────────────────────────────────────────────
+
+function openModal(name) {
+  if(!liveData) return;
+  const animal = MASTER_MAP[name];
+  const col   = animal ? (RARITY_COLORS[animal.r] || '#c084fc') : '#c084fc';
+  const rcls  = animal ? 'rc-' + animal.r.replace(/ /g,'') : '';
+  const count = liveData.counts?.[name] || 0;
+  const mutSum   = liveData.mutSummary?.[name]   || {};
+  const traitSum = liveData.traitSummary?.[name] || {};
+  const hasMutData = Object.keys(mutSum).length > 0;
+  const effectiveMutSum = hasMutData ? mutSum : { Normal: count };
+
+  // Image
+  const imgWrap = document.getElementById('modalImgWrap');
+  const imgEl = new Image();
+  imgEl.className = 'modal-img';
+  imgEl.alt = name;
+  imgEl.onerror = function() { imgWrap.innerHTML = '<div class="modal-img-placeholder">🧠</div>'; };
+  imgEl.src = 'images/' + encodeURIComponent(name) + '.png';
+  imgWrap.innerHTML = '';
+  imgWrap.appendChild(imgEl);
+
+  // Title & rarity
+  document.getElementById('modalTitle').textContent = name;
+  document.getElementById('modalTitle').style.color = col;
+  const rarDiv = document.getElementById('modalRarity');
+  rarDiv.textContent = animal ? animal.r : '';
+  rarDiv.className = 'modal-rarity ' + rcls;
+
+  // Stats cards
+  document.getElementById('modalTotal').textContent = count.toLocaleString();
+  document.getElementById('modalTotal').style.color = col;
+  const mutatedCount = Object.entries(effectiveMutSum).filter(function(e){return e[0]!=='Normal';}).reduce(function(s,e){return s+e[1];},0);
+  document.getElementById('modalMutCount').textContent = mutatedCount > 0 ? mutatedCount.toLocaleString() : '–';
+  document.getElementById('modalMutCount').style.color = mutatedCount > 0 ? '#f97316' : '#44446a';
+
+  if(count === 0) {
+    document.getElementById('modalMutSection').style.display = 'none';
+    document.getElementById('modalCopiesSection').style.display = 'none';
+  } else {
+    // Mutations bars
+    document.getElementById('modalMutSection').style.display = 'block';
+    var mutEntries = Object.entries(effectiveMutSum).sort(function(a,b){return b[1]-a[1];});
+    var mutMax = mutEntries[0] ? mutEntries[0][1] : 1;
+    var mutTotal = mutEntries.reduce(function(s,e){return s+e[1];},0);
+    document.getElementById('modalMutSummary').innerHTML = mutEntries.map(function(entry) {
+      var m = entry[0]; var cnt = entry[1];
+      var md = MUTATIONS[m] || {color:'#888',bg:'rgba(136,136,136,0.12)',border:'rgba(136,136,136,0.3)'};
+      var pct = mutTotal > 0 ? ((cnt/mutTotal)*100).toFixed(1) : 0;
+      var barW = mutMax > 0 ? (cnt/mutMax*100).toFixed(1) : 0;
+      var emoji = m === 'Normal' ? '⬜' : '✨';
+      return '<div class="bar-row">'
+        + '<div class="bar-dot" style="background:'+md.color+'"></div>'
+        + '<div class="bar-icon">'+emoji+'</div>'
+        + '<div class="bar-name" style="color:'+md.color+'">'+m+'</div>'
+        + '<div class="bar-track"><div class="bar-fill" style="width:'+barW+'%;background:'+md.color+'"></div></div>'
+        + '<div class="bar-count" style="color:'+md.color+'">'+cnt.toLocaleString()+'</div>'
+        + '<div class="bar-pct">('+pct+'%)</div>'
+        + '</div>';
+    }).join('');
+
+    // Traits bars with pagination
+    var traitEntries = Object.entries(traitSum).sort(function(a,b){return b[1]-a[1];});
+    if(traitEntries.length > 0) {
+      document.getElementById('modalCopiesSection').style.display = 'block';
+      var traitPage = 0;
+      var traitPageSize = 10;
+      var traitTotal = traitEntries.length;
+
+      function renderTraits() {
+        var start = traitPage * traitPageSize;
+        var end   = Math.min(start + traitPageSize, traitTotal);
+        var slice = traitEntries.slice(start, end);
+        var maxTrait = traitEntries[0][1];
+
+        var prevDisabled = traitPage === 0 ? 'disabled' : '';
+        var nextDisabled = end >= traitTotal ? 'disabled' : '';
+        var fromN = start + 1;
+        var toN   = end;
+
+        document.getElementById('modalTraitLabel').innerHTML =
+          '🏷️ Traits &nbsp;'
+          + '<span style="color:#33335a;font-weight:400">('+ fromN +'-'+ toN +' sur '+ traitTotal +')</span>'
+          + '&nbsp;&nbsp;'
+          + '<button onclick="traitNav(-1)" id="traitPrev" '+ prevDisabled +' style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#aaa;border-radius:6px;padding:1px 8px;cursor:pointer;font-size:0.8rem;margin-right:4px" '+(traitPage===0?'style="opacity:.3"':'')+'">◀</button>'
+          + '<button onclick="traitNav(1)"  id="traitNext" '+ nextDisabled +' style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#aaa;border-radius:6px;padding:1px 8px;cursor:pointer;font-size:0.8rem" '+(end>=traitTotal?'style="opacity:.3"':'')+'">▶</button>';
+
+        document.getElementById('modalCopies').innerHTML = slice.map(function(entry) {
+          var t = entry[0]; var cnt = entry[1];
+          var pct  = count > 0 ? ((cnt/count)*100).toFixed(1) : 0;
+          var barW = maxTrait > 0 ? (cnt/maxTrait*100).toFixed(1) : 0;
+          return '<div class="bar-row">'
+            + '<div class="bar-dot" style="background:#c084fc"></div>'
+            + '<div class="bar-icon">🏷️</div>'
+            + '<div class="bar-name" style="color:#c084fc">'+t+'</div>'
+            + '<div class="bar-track"><div class="bar-fill" style="width:'+barW+'%;background:#c084fc"></div></div>'
+            + '<div class="bar-count" style="color:#c084fc">'+cnt.toLocaleString()+'</div>'
+            + '<div class="bar-pct">('+pct+'%)</div>'
+            + '</div>';
+        }).join('');
+      }
+
+      window.traitNav = function(dir) {
+        var maxPage = Math.ceil(traitTotal / traitPageSize) - 1;
+        traitPage = Math.max(0, Math.min(maxPage, traitPage + dir));
+        renderTraits();
+      };
+
+      renderTraits();
+    } else {
+      document.getElementById('modalCopiesSection').style.display = 'none';
+    }
+  }
+  document.getElementById('modalOverlay').style.display = 'flex';
+}
+
+function closeModal(e) {
+  if(e.target === document.getElementById('modalOverlay')) {
+    document.getElementById('modalOverlay').style.display = 'none';
+  }
+}
+
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape') document.getElementById('modalOverlay').style.display = 'none';
+});
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+// Pre-fill Bin ID if not already saved
+if(!sessionStorage.getItem('binId')) {
+  sessionStorage.setItem('binId', '69a871b943b1c97be9b369c7'); sessionStorage.setItem('binId2', '69a88cddae596e708f5f7ecb'); sessionStorage.setItem('apiKey', '$2a$10$zYpN4lgLUxpFrEj9gmHXSe8aamA0VMSGQ3wTgZUerR181/l5cUuP2');
+}
+loadConfig();
+fetchData();
+setInterval(fetchData, 30000); // auto-refresh toutes les 30s
+</script>
+
+<div id="modalOverlay" class="modal-overlay" style="display:none">
+  <div class="modal" id="modalBox">
+    <button class="modal-close" onclick="document.getElementById('modalOverlay').style.display='none'">✕</button>
+
+    <!-- Header -->
+    <div class="modal-hero">
+      <div id="modalImgWrap"></div>
+      <div class="modal-hero-info">
+        <div class="modal-title" id="modalTitle"></div>
+        <div id="modalRarity" class="modal-rarity"></div>
+      </div>
+    </div>
+
+    <!-- Stats cards -->
+    <div class="modal-stats-row">
+      <div class="modal-stat-card">
+        <div class="sc-label">Total existants</div>
+        <div class="sc-value" id="modalTotal"></div>
+      </div>
+      <div class="modal-stat-card">
+        <div class="sc-label">Avec mutation</div>
+        <div class="sc-value" id="modalMutCount"></div>
+      </div>
+    </div>
+
+    <!-- Mutations section -->
+    <div class="modal-section" id="modalMutSection" style="display:none">
+      <div class="modal-section-title">✨ Mutations</div>
+      <div id="modalMutSummary"></div>
+    </div>
+
+    <!-- Traits section -->
+    <div class="modal-section" id="modalCopiesSection" style="display:none">
+      <div class="modal-section-title" id="modalTraitLabel">🏷️ Traits</div>
+      <div id="modalCopies"></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
