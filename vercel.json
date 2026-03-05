@@ -1,0 +1,21 @@
+{
+  "cleanUrls": false,
+  "trailingSlash": false,
+  "headers": [
+    {
+      "source": "/images/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/images/:name",
+      "destination": "/images/:name"
+    }
+  ]
+}
