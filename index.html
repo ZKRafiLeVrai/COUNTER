@@ -449,6 +449,83 @@
     border: 1px solid rgba(192,132,252,0.3);
     color: #c084fc;
   }
+
+  /* ── TABS ── */
+  .tabs {
+    display: flex; gap: 8px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    padding-bottom: 0;
+  }
+  .tab-btn {
+    background: none; border: none;
+    color: #44446a; font-size: 0.9rem; font-weight: 700;
+    padding: 10px 20px; cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all .15s; border-radius: 8px 8px 0 0;
+    letter-spacing: 0.5px;
+  }
+  .tab-btn.active { color: #c084fc; border-bottom-color: #c084fc; }
+  .tab-btn:hover:not(.active) { color: #888; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* ── PROFILE LOGIN ── */
+  .profile-login {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 16px; padding: 28px;
+    text-align: center; max-width: 420px; margin: 0 auto;
+  }
+  .profile-login h3 { font-size: 1.2rem; margin-bottom: 8px; color: #c084fc; }
+  .profile-login p  { font-size: 0.82rem; color: #44446a; margin-bottom: 20px; }
+  .profile-login input {
+    width: 100%; padding: 12px 16px; border-radius: 10px;
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+    color: #fff; font-size: 0.95rem; margin-bottom: 12px; box-sizing: border-box;
+  }
+  .profile-login input:focus { outline: none; border-color: #c084fc; }
+  .profile-login button {
+    width: 100%; padding: 12px; border-radius: 10px;
+    background: linear-gradient(135deg, #7c3aed, #c084fc);
+    border: none; color: #fff; font-size: 0.95rem;
+    font-weight: 900; cursor: pointer; transition: opacity .15s;
+  }
+  .profile-login button:hover { opacity: 0.85; }
+  .profile-login .error { color: #f87171; font-size: 0.8rem; margin-top: 8px; }
+  .profile-loading { text-align: center; padding: 40px; color: #44446a; }
+
+  /* ── PROFILE CARD ── */
+  .profile-hero {
+    display: flex; align-items: center; gap: 20px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 16px; padding: 20px 24px; margin-bottom: 20px;
+  }
+  .profile-avatar {
+    width: 60px; height: 60px; border-radius: 50%;
+    background: linear-gradient(135deg, #7c3aed, #c084fc);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.6rem; flex-shrink: 0;
+  }
+  .profile-name { font-family: 'Bangers', cursive; font-size: 1.8rem; letter-spacing: 2px; }
+  .profile-sub  { font-size: 0.75rem; color: #44446a; }
+  .profile-logout {
+    margin-left: auto; background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1); color: #666;
+    border-radius: 8px; padding: 6px 14px; cursor: pointer;
+    font-size: 0.78rem; transition: all .15s;
+  }
+  .profile-logout:hover { color: #f87171; border-color: #f87171; }
+  .profile-stats {
+    display: grid; grid-template-columns: repeat(2, 1fr);
+    gap: 10px; margin-bottom: 20px;
+  }
+  .profile-section-title {
+    font-size: 0.68rem; color: #44446a;
+    text-transform: uppercase; letter-spacing: 1.5px;
+    font-weight: 900; margin: 20px 0 12px;
+  }
 </style>
 </head>
 <body>
@@ -468,6 +545,10 @@
   <div>
     <label>Bin ID Details (mutations)</label>
     <input type="text" id="inputBinId2" placeholder="2e Bin ID pour les mutations..." />
+  </div>
+  <div>
+    <label>Bin ID Joueurs (profils perso)</label>
+    <input type="text" id="inputBinId3" placeholder="3e Bin ID pour les profils..." />
   </div>
   <div>
     <label>Master Key</label>
@@ -497,6 +578,15 @@
   <button class="refresh-btn" onclick="fetchData()">🔄 Actualiser</button>
   <button class="refresh-btn" onclick="debugBin()" style="background:rgba(16,185,129,0.15);border-color:#10b98155;color:#10b981">🔍 Debug Bin</button>
 </div>
+
+<!-- Tabs -->
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('global')">🌍 Global</button>
+  <button class="tab-btn" onclick="switchTab('personal')">👤 Personnel</button>
+</div>
+
+<!-- TAB GLOBAL -->
+<div class="tab-content active" id="tab-global">
 
 <!-- Totals -->
 <div class="totals-grid" id="totalsGrid">
@@ -845,7 +935,9 @@ function saveConfig() {
   const apiKey = document.getElementById('inputApiKey').value.trim();
   if(!binId) { alert('Entre un Bin ID !'); return; }
   sessionStorage.setItem('binId', binId);
+  const binId3 = document.getElementById('inputBinId3').value.trim();
   sessionStorage.setItem('binId2', binId2);
+  sessionStorage.setItem('binId3', binId3);
   sessionStorage.setItem('apiKey', apiKey);
   fetchData();
 }
@@ -855,7 +947,9 @@ function loadConfig() {
   const binId2 = sessionStorage.getItem('binId2') || '';
   const apiKey = sessionStorage.getItem('apiKey') || '';
   document.getElementById('inputBinId').value  = binId;
+  const binId3 = sessionStorage.getItem('binId3') || '';
   document.getElementById('inputBinId2').value = binId2;
+  document.getElementById('inputBinId3').value = binId3;
   document.getElementById('inputApiKey').value = apiKey;
   return { binId, binId2, apiKey };
 }
@@ -1215,15 +1309,212 @@ document.addEventListener('keydown', e => {
   if(e.key === 'Escape') document.getElementById('modalOverlay').style.display = 'none';
 });
 
+
+// ─── TABS ────────────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+  document.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); });
+  document.querySelector('.tab-btn[onclick*="' + tab + '"]').classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
+  if(tab === 'personal') renderProfile();
+}
+
+// ─── PROFILE ─────────────────────────────────────────────────────────────────
+var profileData = null;
+var profileUsername = sessionStorage.getItem('profileUsername') || null;
+
+function renderProfile() {
+  var section = document.getElementById('profileSection');
+  if(!profileUsername) {
+    section.innerHTML = '<div class="profile-login">'
+      + '<h3>👤 Connexion</h3>'
+      + '<p>Entre ton pseudo Roblox pour voir tes stats personnelles</p>'
+      + '<input type="text" id="profileInput" placeholder="Ton pseudo Roblox..." onkeydown="if(event.key===\'Enter\') loginProfile()">'
+      + '<button onclick="loginProfile()">Voir mes stats</button>'
+      + '<div class="error" id="profileError"></div>'
+      + '</div>';
+    return;
+  }
+  if(!profileData) {
+    section.innerHTML = '<div class="profile-loading">⏳ Chargement de ton profil...</div>';
+    fetchProfile(profileUsername);
+    return;
+  }
+  renderProfileData();
+}
+
+async function loginProfile() {
+  var input = document.getElementById('profileInput');
+  if(!input) return;
+  var username = input.value.trim();
+  if(!username) return;
+
+  document.getElementById('profileError').textContent = '';
+  document.getElementById('profileSection').innerHTML = '<div class="profile-loading">🔍 Recherche de ' + username + '...</div>';
+
+  await fetchProfile(username);
+}
+
+async function fetchProfile(username) {
+  var section = document.getElementById('profileSection');
+  try {
+    // 1. Récupère l'userId depuis l'API Roblox
+    var res = await fetch('https://users.roblox.com/v1/usernames/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ usernames: [username], excludeBannedUsers: false })
+    });
+    var json = await res.json();
+    if(!json.data || json.data.length === 0) {
+      showProfileError('Pseudo introuvable sur Roblox');
+      return;
+    }
+    var userId = json.data[0].id;
+    var displayName = json.data[0].name;
+
+    // 2. Cherche dans le bin players
+    var { binId2, apiKey } = loadConfig();
+    // On utilise le bin players (bin 3) — stocké comme binId3
+    var binId3 = sessionStorage.getItem('binId3') || '';
+    if(!binId3) {
+      showProfileError('Bin joueurs non configuré (JSONBIN_BIN_ID_PLAYERS)');
+      return;
+    }
+    var headers2 = { 'X-Bin-Meta': 'false', 'X-Master-Key': apiKey, 'X-Access-Key': apiKey };
+    var res2 = await fetch('https://api.jsonbin.io/v3/b/' + binId3 + '/latest', { headers: headers2 });
+    if(!res2.ok) { showProfileError('Erreur lecture bin joueurs'); return; }
+    var pdata = JSON.parse(await res2.text());
+    var rec = pdata.record || pdata;
+    var players = rec.players || {};
+    var playerKey = displayName.toLowerCase();
+    if(!players[playerKey]) {
+      showProfileError(displayName + ' n\'a pas encore joué ou n\'est pas enregistré');
+      return;
+    }
+    profileData = players[playerKey];
+    profileUsername = displayName;
+    sessionStorage.setItem('profileUsername', displayName);
+    renderProfileData();
+  } catch(e) {
+    showProfileError('Erreur: ' + e.message);
+  }
+}
+
+function showProfileError(msg) {
+  profileUsername = null;
+  sessionStorage.removeItem('profileUsername');
+  renderProfile();
+  var errEl = document.getElementById('profileError');
+  if(errEl) errEl.textContent = '❌ ' + msg;
+}
+
+function logoutProfile() {
+  profileData = null;
+  profileUsername = null;
+  sessionStorage.removeItem('profileUsername');
+  renderProfile();
+}
+
+function renderProfileData() {
+  if(!profileData) return;
+  var section = document.getElementById('profileSection');
+  var d = profileData;
+  var brainrotNames = Object.keys(d.counts || {});
+  var totalPodium = d.totalInPodium || 0;
+
+  // Mutations summary
+  var mutTotals = {};
+  Object.values(d.mutSummary || {}).forEach(function(muts) {
+    Object.entries(muts).forEach(function(e) {
+      mutTotals[e[0]] = (mutTotals[e[0]] || 0) + e[1];
+    });
+  });
+  var mutEntries = Object.entries(mutTotals).sort(function(a,b){return b[1]-a[1];});
+  var mutTotal   = mutEntries.reduce(function(s,e){return s+e[1];},0);
+  var mutMax     = mutEntries[0] ? mutEntries[0][1] : 1;
+
+  // Rarest brainrot (lowest global count)
+  var rarest = '–';
+  var rarestCount = Infinity;
+  brainrotNames.forEach(function(n) {
+    var gc = liveData && liveData.counts ? (liveData.counts[n] || 0) : 0;
+    if(gc > 0 && gc < rarestCount) { rarestCount = gc; rarest = n; }
+  });
+
+  var html = '<div class="profile-hero">'
+    + '<div class="profile-avatar">🧠</div>'
+    + '<div>'
+    + '<div class="profile-name">' + d.username + '</div>'
+    + '<div class="profile-sub">Rebirth ' + (d.rebirth || 0) + ' · ID ' + (d.userId || '?') + '</div>'
+    + '</div>'
+    + '<button class="profile-logout" onclick="logoutProfile()">Déconnexion</button>'
+    + '</div>'
+
+    + '<div class="profile-stats">'
+    + '<div class="modal-stat-card"><div class="sc-label">Brainrots podium</div><div class="sc-value" style="color:#c084fc">' + totalPodium + '</div></div>'
+    + '<div class="modal-stat-card"><div class="sc-label">Espèces</div><div class="sc-value" style="color:#c084fc">' + brainrotNames.length + '</div></div>'
+    + '<div class="modal-stat-card"><div class="sc-label">Mutés</div><div class="sc-value" style="color:#f97316">' + (mutTotal - (mutTotals['Normal']||0)) + '</div></div>'
+    + '<div class="modal-stat-card"><div class="sc-label">Le plus rare</div><div class="sc-value" style="color:#fbbf24;font-size:0.9rem">' + rarest + '</div></div>'
+    + '</div>'
+
+    + '<div class="profile-section-title">✨ Tes mutations</div>';
+
+  if(mutEntries.length > 0) {
+    html += mutEntries.map(function(entry) {
+      var m = entry[0]; var cnt = entry[1];
+      var md = MUTATIONS[m] || {color:'#888',bg:'rgba(136,136,136,0.12)',border:'rgba(136,136,136,0.3)'};
+      var pct  = mutTotal > 0 ? ((cnt/mutTotal)*100).toFixed(1) : 0;
+      var barW = mutMax  > 0 ? (cnt/mutMax*100).toFixed(1) : 0;
+      var emoji = m === 'Normal' ? '⬜' : '✨';
+      return '<div class="bar-row">'
+        + '<div class="bar-dot" style="background:'+md.color+'"></div>'
+        + '<div class="bar-icon">'+emoji+'</div>'
+        + '<div class="bar-name" style="color:'+md.color+'">'+m+'</div>'
+        + '<div class="bar-track"><div class="bar-fill" style="width:'+barW+'%;background:'+md.color+'"></div></div>'
+        + '<div class="bar-count" style="color:'+md.color+'">'+cnt+'</div>'
+        + '<div class="bar-pct">('+pct+'%)</div>'
+        + '</div>';
+    }).join('');
+  }
+
+  html += '<div class="profile-section-title">🦎 Tes brainrots</div>';
+  var sortedBrainrots = brainrotNames.sort(function(a,b){ return (d.counts[b]||0)-(d.counts[a]||0); });
+  html += sortedBrainrots.map(function(n) {
+    var cnt = d.counts[n] || 0;
+    var animal = MASTER_MAP[n];
+    var col = animal ? (RARITY_COLORS[animal.r] || '#888') : '#888';
+    var rcls = animal ? 'rc-' + animal.r.replace(/ /g,'') : '';
+    var gc = liveData && liveData.counts ? (liveData.counts[n] || 0) : '?';
+    return '<div class="bar-row" style="cursor:pointer" onclick="openModal(\'' + n.replace(/'/g,"\'") + '\')">'
+      + '<div class="bar-dot" style="background:'+col+'"></div>'
+      + '<div class="bar-icon">🦎</div>'
+      + '<div class="bar-name" style="color:'+col+'">'+n+'</div>'
+      + '<div style="flex:1"></div>'
+      + '<span class="td-rarity '+rcls+'" style="font-size:0.65rem">'+(animal?animal.r:'')+'</span>'
+      + '<div class="bar-count" style="color:'+col+';margin-left:10px">×'+cnt+'</div>'
+      + '<div class="bar-pct">'+gc+' global</div>'
+      + '</div>';
+  }).join('');
+
+  section.innerHTML = html;
+}
+
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 // Pre-fill Bin ID if not already saved
 if(!sessionStorage.getItem('binId')) {
-  sessionStorage.setItem('binId', '69a871b943b1c97be9b369c7'); sessionStorage.setItem('binId2', '69a88cddae596e708f5f7ecb'); sessionStorage.setItem('apiKey', '$2a$10$zYpN4lgLUxpFrEj9gmHXSe8aamA0VMSGQ3wTgZUerR181/l5cUuP2');
+  sessionStorage.setItem('binId', '69a871b943b1c97be9b369c7'); sessionStorage.setItem('binId2', '69a88cddae596e708f5f7ecb'); if(!sessionStorage.getItem('binId3')) sessionStorage.setItem('binId3', '69b99e67c3097a1dd533bdbe'); sessionStorage.setItem('apiKey', '$2a$10$zYpN4lgLUxpFrEj9gmHXSe8aamA0VMSGQ3wTgZUerR181/l5cUuP2');
 }
 loadConfig();
 fetchData();
 setInterval(fetchData, 30000); // auto-refresh toutes les 30s
 </script>
+
+</div><!-- end tab-global -->
+
+<!-- TAB PERSONAL -->
+<div class="tab-content" id="tab-personal">
+  <div id="profileSection"></div>
+</div><!-- end tab-personal -->
 
 <div id="modalOverlay" class="modal-overlay" style="display:none">
   <div class="modal" id="modalBox">
