@@ -1,4 +1,4 @@
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   // Autorise les CORS pour que Roblox puisse appeler
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -40,7 +40,6 @@ export default async function handler(req, res) {
         const data = await response.json();
 
         for (const entry of (data.dataStoreEntries || [])) {
-          // L'ID est de la forme "global/123456789", on extrait le nombre
           const entryId = entry.id;
           const keyName = entryId.includes('/') ? entryId.split('/')[1] : entryId;
           allKeys.push(keyName);
@@ -52,20 +51,11 @@ export default async function handler(req, res) {
       return res.status(200).json({ keys: allKeys });
     }
 
-if (action === 'getData') {
-  // Lire les données d'un joueur
-  const response = await fetch(`https://apis.roblox.com/cloud/v2/universes/${universeId}/data-stores/${dataStoreName}/entries/${encodeURIComponent(`global/${key}`)}`, {
-    headers: { 'x-api-key': API_KEY }
-  });
-
-  if (!response.ok) {
-    const errText = await response.text();
-    return res.status(response.status).json({ error: errText });
-  }
-
-  const data = await response.json();
-  return res.status(200).json({ value: data.value });
-}
+    if (action === 'getData') {
+      // Lire les données d'un joueur
+      const response = await fetch(`https://apis.roblox.com/cloud/v2/universes/${universeId}/data-stores/${dataStoreName}/entries/${encodeURIComponent('global/' + key)}`, {
+        headers: { 'x-api-key': API_KEY }
+      });
 
       if (!response.ok) {
         const errText = await response.text();
@@ -80,4 +70,4 @@ if (action === 'getData') {
   } catch (e) {
     return res.status(500).json({ error: e.message });
   }
-}
+};
