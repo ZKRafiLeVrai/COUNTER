@@ -20,23 +20,16 @@ export default async function handler(req, res) {
     if (action === 'listKeys') {
       // Lister toutes les clés du DataStore
       let allKeys = [];
-      let cursor = null;
+      let pageToken = null;
 
       do {
-        const body = {
-          dataStoreName: dataStoreName,
-          scope: "global",
-          maxPageSize: 100,
-        };
-        if (cursor) body.pageToken = cursor;
+        let url = `https://apis.roblox.com/cloud/v2/universes/${universeId}/data-stores/${dataStoreName}/entries?scope=global&maxPageSize=100`;
+        if (pageToken) {
+          url += `&pageToken=${encodeURIComponent(pageToken)}`;
+        }
 
-        const response = await fetch(`https://apis.roblox.com/cloud/v2/universes/${universeId}/data-stores/entry/list`, {
-          method: 'POST',
-          headers: {
-            'x-api-key': API_KEY,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(body),
+        const response = await fetch(url, {
+          headers: { 'x-api-key': API_KEY }
         });
 
         if (!response.ok) {
@@ -46,22 +39,23 @@ export default async function handler(req, res) {
 
         const data = await response.json();
 
-        for (const entry of (data.keys || [])) {
-          allKeys.push(entry.key);
+        for (const entry of (data.dataStoreEntries || [])) {
+          // L'ID est de la forme "global/123456789", on extrait le nombre
+          const entryId = entry.id;
+          const keyName = entryId.includes('/') ? entryId.split('/')[1] : entryId;
+          allKeys.push(keyName);
         }
 
-        cursor = data.nextPageToken;
-      } while (cursor);
+        pageToken = data.nextPageToken;
+      } while (pageToken);
 
       return res.status(200).json({ keys: allKeys });
     }
 
     if (action === 'getData') {
       // Lire les données d'un joueur
-      const response = await fetch(`https://apis.roblox.com/cloud/v2/universes/${universeId}/data-stores/${dataStoreName}/entries/${key}`, {
-        headers: {
-          'x-api-key': API_KEY,
-        },
+      const response = await fetch(`https://apis.roblox.com/cloud/v2/universes/${universeId}/data-stores/${dataStoreName}/entries/global%2F${key}`, {
+        headers: { 'x-api-key': API_KEY }
       });
 
       if (!response.ok) {
