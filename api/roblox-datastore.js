@@ -52,11 +52,20 @@ export default async function handler(req, res) {
       return res.status(200).json({ keys: allKeys });
     }
 
-    if (action === 'getData') {
-      // Lire les données d'un joueur
-      const response = await fetch(`https://apis.roblox.com/cloud/v2/universes/${universeId}/data-stores/${dataStoreName}/entries/global%2F${key}`, {
-        headers: { 'x-api-key': API_KEY }
-      });
+if (action === 'getData') {
+  // Lire les données d'un joueur
+  const response = await fetch(`https://apis.roblox.com/cloud/v2/universes/${universeId}/data-stores/${dataStoreName}/entries/${encodeURIComponent(`global/${key}`)}`, {
+    headers: { 'x-api-key': API_KEY }
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    return res.status(response.status).json({ error: errText });
+  }
+
+  const data = await response.json();
+  return res.status(200).json({ value: data.value });
+}
 
       if (!response.ok) {
         const errText = await response.text();
