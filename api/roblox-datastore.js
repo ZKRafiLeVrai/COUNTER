@@ -26,18 +26,18 @@ module.exports = async function handler(req, res) {
           url += `&pageToken=${encodeURIComponent(pageToken)}`;
         }
 
-        const response = await fetch(url, {
-          headers: { 'x-api-key': API_KEY }
-        });
+        const response = await fetch(url, { headers: { 'x-api-key': API_KEY } });
 
         if (!response.ok) {
           const errText = await response.text();
+          console.error('[Proxy] Erreur listKeys:', response.status, errText);
           return res.status(response.status).json({ error: errText });
         }
 
         const data = await response.json();
 
         for (const entry of (data.dataStoreEntries || [])) {
+          // L'ID retourné est comme "global/XXXXX". On extrait le XXXX.
           const entryId = entry.id;
           const keyName = entryId.includes('/') ? entryId.split('/')[1] : entryId;
           allKeys.push(keyName);
@@ -50,19 +50,26 @@ module.exports = async function handler(req, res) {
     }
 
     if (action === 'getData') {
-      console.log(`[Proxy] Lecture données pour la clé: ${key}`);
+      // L'API Open Cloud veut l'entrée "global/123456" dans le chemin.
+      // On doit encoder le '/' pour l'URL.
+      const entryPath = `global/${key}`;
+      const url = `https://apis.roblox.com/cloud/v2/universes/${universeId}/data-stores/${dataStoreName}/entries/${encodeURIComponent(entryPath)}`;
 
-      const response = await fetch(`https://apis.roblox.com/cloud/v2/universes/${universeId}/data-stores/${dataStoreName}/entries/${encodeURIComponent('global/' + key)}`, {
+      console.log(`[Proxy] Lecture de la clé: ${key}`);
+
+      const response = await fetch(url, {
         headers: { 'x-api-key': API_KEY }
       });
 
       if (!response.ok) {
         const errText = await response.text();
-        console.log(`[Proxy] Échec (${response.status}) pour la clé ${key}`);
-        return res.status(404).json({ error: errText });
+        console.error(`[Proxy] Échec lecture clé ${key}: ${response.status} - ${errText}`);
+        return res.status(404).json({ error: 'Not found' });
       }
 
       const data = await response.json();
+      console.log(`[Proxy] ✅ Clé ${key} lue avec succès`);
+
       return res.status(200).json({ value: data.value });
     }
 
