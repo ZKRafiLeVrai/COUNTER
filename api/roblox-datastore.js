@@ -1,5 +1,4 @@
 module.exports = async function handler(req, res) {
-  // Autorise les CORS pour que Roblox puisse appeler
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -18,7 +17,6 @@ module.exports = async function handler(req, res) {
 
   try {
     if (action === 'listKeys') {
-      // Lister toutes les clés du DataStore
       let allKeys = [];
       let pageToken = null;
 
@@ -52,14 +50,16 @@ module.exports = async function handler(req, res) {
     }
 
     if (action === 'getData') {
-      // Lire les données d'un joueur
+      console.log(`[Proxy] Lecture données pour la clé: ${key}`);
+
       const response = await fetch(`https://apis.roblox.com/cloud/v2/universes/${universeId}/data-stores/${dataStoreName}/entries/${encodeURIComponent('global/' + key)}`, {
         headers: { 'x-api-key': API_KEY }
       });
 
       if (!response.ok) {
         const errText = await response.text();
-        return res.status(response.status).json({ error: errText });
+        console.log(`[Proxy] Échec (${response.status}) pour la clé ${key}`);
+        return res.status(404).json({ error: errText });
       }
 
       const data = await response.json();
@@ -68,6 +68,7 @@ module.exports = async function handler(req, res) {
 
     return res.status(400).json({ error: 'Action inconnue' });
   } catch (e) {
+    console.error('[Proxy] Erreur:', e.message);
     return res.status(500).json({ error: e.message });
   }
 };
